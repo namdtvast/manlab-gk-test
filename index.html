@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0C8B49">
+<title>ManLab · Hợp đồng giao khoán từ phiếu PNT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#16261C;--ink-2:#41534A;--muted:#7B8B82;--line:#DDE6E0;
+    --surface:#FFFFFF;--bg:#EEF3EF;
+    --brand:#12A455;--brand-d:#0C7C3F;--brand-soft:#E1F3E8;
+    --amber:#A8780A;--amber-soft:#FFE9A8;--amber-pill:#F4B400;
+    --orange:#E07B1A;--orange-soft:#FBE7CF;
+    --blue:#1FA6C9;
+    --green-ok:#1E9E57;--green-soft:#E0F4E8;
+    --danger:#D63A22;--danger-soft:#FBE3DE;
+    --shadow:0 8px 30px rgba(16,60,35,.12);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{font-family:'Inter',system-ui,sans-serif;
+    background:radial-gradient(900px 600px at 80% -10%,#dcefe2 0%,transparent 60%),var(--bg);
+    color:var(--ink);min-height:100vh;display:flex;flex-direction:column;align-items:center;
+    padding:18px 12px 40px;-webkit-font-smoothing:antialiased}
+
+  .testbar{width:100%;max-width:412px;margin-bottom:14px;background:#16261C;color:#fff;
+    border-radius:12px;padding:10px 12px;display:flex;align-items:center;gap:10px;font-size:12.5px}
+  .testbar .dot{width:8px;height:8px;border-radius:50%;background:#F4B400;box-shadow:0 0 0 3px rgba(244,180,0,.2)}
+  .testbar b{font-weight:600}
+  .testbar .spacer{flex:1}
+  .seg{display:flex;background:rgba(255,255,255,.12);border-radius:9px;padding:3px}
+  .seg button{border:0;background:transparent;color:#cfe0d6;font-weight:600;font-size:11.5px;padding:6px 10px;border-radius:7px;cursor:pointer}
+  .seg button.on{background:#fff;color:#16261C}
+  .reset{border:0;background:transparent;color:#9fb6a8;cursor:pointer;font-size:16px;padding:4px}
+
+  .phone{width:100%;max-width:412px;background:var(--surface);border-radius:30px;
+    box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;
+    min-height:792px;border:1px solid #e2ebe5}
+
+  /* green app header */
+  .appbar{background:linear-gradient(165deg,#15A65A,#0C8B49);color:#fff;padding:14px 18px 18px}
+  .appbar .top{display:flex;align-items:center;gap:10px}
+  .back{font-size:20px;cursor:pointer;opacity:.9;line-height:1}
+  .htitle{font-weight:700;font-size:17px;flex:1}
+  .pill{font-family:'Space Mono';font-size:10px;font-weight:700;letter-spacing:.3px;
+    padding:5px 9px;border-radius:20px;text-transform:uppercase;white-space:nowrap}
+  .pill.draft{background:rgba(255,255,255,.18);color:#eafff2}
+  .pill.await{background:var(--amber-pill);color:#5c4300}
+  .pill.live{background:var(--orange);color:#fff}
+  .pill.ok{background:#fff;color:var(--green-ok)}
+  .acct{font-size:11.5px;color:#cdeeda;margin-top:12px;display:flex;align-items:center;gap:6px}
+  .acct b{color:#fff;font-weight:600}
+  .screen-title{margin-top:6px;font-weight:700;font-size:19px;line-height:1.25}
+  .screen-sub{margin-top:4px;font-size:12.5px;color:#c7e8d2;line-height:1.45}
+  .rail{display:flex;gap:5px;margin-top:13px}
+  .rail .tick{flex:1;height:4px;border-radius:3px;background:rgba(255,255,255,.22)}
+  .rail .tick.done{background:#fff}
+  .rail .tick.cur{background:#bff3d3}
+
+  .body{padding:16px 16px 14px;flex:1;overflow-y:auto}
+  .label{font-size:12px;font-weight:600;color:var(--ink-2);margin:0 0 8px;display:flex;align-items:center;gap:6px}
+  .label .hint{font-weight:400;color:var(--muted)}
+  .req{color:var(--danger)}
+  .group{margin-bottom:18px}
+
+  /* linked PNT card */
+  .linked{border:1.5px solid var(--brand);border-radius:14px;overflow:hidden;margin-bottom:16px;background:#fff}
+  .linked .lh{background:var(--brand-soft);padding:10px 14px;display:flex;align-items:center;gap:8px;font-weight:600;font-size:12.5px;color:var(--brand-d)}
+  .linked .lh .lk{font-size:14px}
+  .lrow{display:flex;justify-content:space-between;gap:12px;padding:9px 14px;border-top:1px solid var(--line);font-size:13px}
+  .lrow .k{color:var(--muted);flex-shrink:0}
+  .lrow .v{text-align:right;font-weight:500}
+  .lrow .v.mono{font-family:'Space Mono';letter-spacing:.2px}
+  .autotag{font-size:11px;color:var(--brand-d);background:var(--brand-soft);padding:2px 7px;border-radius:6px;font-weight:600}
+
+  .chips{display:flex;flex-wrap:wrap;gap:9px}
+  .chip{border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:11px 13px;font-size:13.5px;
+    font-weight:500;color:var(--ink);cursor:pointer;display:flex;align-items:center;gap:8px;transition:.12s;flex:1 1 calc(50% - 5px);min-width:140px}
+  .chip .bx{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--line);display:grid;place-items:center;flex-shrink:0}
+  .chip.on{border-color:var(--brand);background:var(--brand-soft)}
+  .chip.on .bx{background:var(--brand);border-color:var(--brand)}
+  .chip.on .bx::after{content:"✓";color:#fff;font-size:12px;font-weight:700}
+
+  .field{margin-bottom:14px}
+  .field input,.field textarea{width:100%;border:1.5px solid var(--line);border-radius:11px;padding:13px;font-size:15px;
+    font-family:'Inter';color:var(--ink);background:#fff;transition:.12s}
+  .field textarea{resize:vertical;min-height:78px;line-height:1.5}
+  .field input.mono{font-family:'Space Mono';letter-spacing:.3px}
+  .field input:focus,.field textarea:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+  .field input.bad,.field textarea.bad{border-color:var(--danger);box-shadow:0 0 0 3px var(--danger-soft)}
+  .err{font-size:11.5px;color:var(--danger);margin-top:5px}
+  .ftag{font-size:11.5px;color:var(--muted);margin-top:5px}
+  .two{display:flex;gap:11px}.two .field{flex:1}
+
+  .photos{display:flex;gap:10px}
+  .ph-slot{flex:1;position:relative;border:1.5px dashed var(--line);border-radius:13px;aspect-ratio:1/1.15;
+    background:#fafdfb;display:grid;place-items:center;cursor:pointer;overflow:hidden;text-align:center}
+  .ph-slot.bad{border-color:var(--danger);background:var(--danger-soft)}
+  .ph-slot.set{border-style:solid;border-color:var(--brand)}
+  .ph-slot input{position:absolute;inset:0;opacity:0;cursor:pointer}
+  .ph-slot .ph-ic{font-size:24px}
+  .ph-slot .ph-tx{font-size:11px;color:var(--muted);margin-top:5px;padding:0 6px;line-height:1.3}
+  .ph-slot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .ph-slot .ph-ok{position:absolute;top:6px;right:6px;width:20px;height:20px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:700}
+
+  .card{border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:16px}
+  .card .ch{background:var(--bg);padding:11px 14px;font-weight:600;font-size:13px;display:flex;align-items:center;gap:8px}
+  .card .ch .n{font-family:'Space Mono';font-size:11px;color:var(--brand-d);background:var(--brand-soft);padding:2px 7px;border-radius:6px}
+  .row{display:flex;justify-content:space-between;gap:12px;padding:11px 14px;border-top:1px solid var(--line);font-size:13.5px}
+  .row:first-child{border-top:0}
+  .row .k{color:var(--muted);flex-shrink:0}
+  .row .v{text-align:right;font-weight:500}
+  .row .v.mono{font-family:'Space Mono';letter-spacing:.2px}
+  .row .v.bank{font-family:'Space Mono';letter-spacing:.2px;font-weight:700;color:var(--ink)}
+  .row .v.amt{font-family:'Space Mono';font-weight:700;color:var(--brand-d)}
+  .tasklist{padding:11px 14px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:6px}
+  .tasklist span{background:var(--bg);border-radius:7px;padding:5px 9px;font-size:12px;font-weight:500}
+  .thumbs{display:flex;gap:8px;padding:11px 14px;border-top:1px solid var(--line)}
+  .thumbs .t{flex:1}.thumbs .t img{width:100%;aspect-ratio:1/1.1;object-fit:cover;border-radius:9px;border:1px solid var(--line)}
+  .thumbs .t .cap{font-size:10.5px;color:var(--muted);text-align:center;margin-top:4px}
+
+  .note{background:var(--brand-soft);border-radius:12px;padding:12px 14px;font-size:12.5px;color:var(--brand-d);line-height:1.5;display:flex;gap:9px}
+  .note.amber{background:var(--amber-soft);color:#7a5500}
+  .note.gray{background:var(--bg);color:var(--ink-2)}
+  .note .ic{flex-shrink:0;font-size:15px}
+
+  .opts{display:flex;gap:10px}
+  .opt{flex:1;border:1.5px solid var(--line);border-radius:12px;padding:14px;text-align:center;cursor:pointer;font-weight:600;font-size:14px;color:var(--ink-2)}
+  .opt.on-pass{border-color:var(--green-ok);background:var(--green-soft);color:var(--green-ok)}
+  .opt.on-fail{border-color:var(--danger);background:var(--danger-soft);color:var(--danger)}
+
+  .gate{text-align:center;padding:8px 6px}
+  .qr{width:160px;height:160px;margin:4px auto 14px;border-radius:18px;background:#fff;border:1px solid var(--line);display:grid;place-items:center}
+  .qr svg{width:132px;height:132px}
+  .codebox{font-family:'Space Mono';font-weight:700;font-size:21px;letter-spacing:3px;text-align:center;color:var(--ink);background:var(--bg);border-radius:13px;padding:14px;margin-bottom:14px}
+  .shareopts{display:flex;gap:10px;margin-bottom:14px}
+  .shareopts button{flex:1;border:1px solid var(--line);background:#fff;border-radius:12px;padding:13px 8px;font-size:12px;font-weight:600;color:var(--ink);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px}
+  .shareopts button .ic{font-size:19px}
+  .waitbar{display:flex;align-items:center;gap:10px;background:var(--amber-soft);border-radius:12px;padding:13px 14px;color:#7a5500;font-size:13px;font-weight:500;margin-bottom:10px}
+  .spin{width:16px;height:16px;border:2.5px solid #ecd28a;border-top-color:var(--amber);border-radius:50%;animation:sp .8s linear infinite;flex-shrink:0}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .simlink{display:block;width:100%;text-align:center;background:none;border:1px dashed var(--muted);color:var(--muted);border-radius:10px;padding:10px;font-size:11.5px;cursor:pointer;margin-top:4px}
+
+  .bbar{background:#e7efe9;padding:9px 14px;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink-2);border-bottom:1px solid var(--line)}
+  .bbar .url{font-family:'Space Mono';font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .bhead{padding:18px 18px 6px;text-align:center}
+  .bhead .logo2{width:48px;height:48px;border-radius:13px;background:var(--brand);display:grid;place-items:center;margin:0 auto 10px;font-weight:700;color:#fff;font-size:22px}
+  .bhead h1{font-weight:700;font-size:19px;margin:0 0 4px}
+  .bhead p{font-size:12.5px;color:var(--muted);margin:0}
+  .consent{padding:13px 14px;background:var(--bg);border-radius:12px;margin:14px 0}
+  .consent p{margin:0;font-size:12.5px;line-height:1.55;color:var(--ink-2)}
+
+  .foot{padding:13px 16px;border-top:1px solid var(--line);background:#fff;display:flex;gap:11px}
+  .btn{flex:1;border:0;border-radius:13px;padding:15px;font-size:15px;font-weight:700;font-family:'Inter';cursor:pointer;transition:.12s}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+  .btn.primary{background:var(--brand);color:#fff;box-shadow:0 6px 16px rgba(18,164,85,.30)}
+  .btn.primary:active:not(:disabled){transform:translateY(1px)}
+  .btn.confirm{background:var(--green-ok);color:#fff;box-shadow:0 6px 16px rgba(30,158,87,.28)}
+  .btn.big{padding:18px;font-size:17px}
+  .btn.ghost{flex:0 0 auto;background:var(--bg);color:var(--ink-2);box-shadow:none;padding:15px 18px}
+
+  .done{text-align:center;padding:26px 12px 10px}
+  .seal{width:88px;height:88px;border-radius:50%;background:var(--green-soft);display:grid;place-items:center;margin:0 auto 16px;animation:pop .4s ease}
+  .seal .ring{width:58px;height:58px;border-radius:50%;background:var(--green-ok);display:grid;place-items:center;color:#fff;font-size:30px}
+  @keyframes pop{0%{transform:scale(.5);opacity:0}100%{transform:scale(1);opacity:1}}
+  .done h2{font-weight:700;font-size:21px;margin:0 0 8px}
+  .done p{color:var(--ink-2);font-size:13.5px;line-height:1.55;margin:0 auto;max-width:300px}
+  .receipt{font-family:'Space Mono';font-size:11.5px;color:var(--muted);margin-top:16px;background:var(--bg);border-radius:10px;padding:10px;line-height:1.6}
+
+  .center-info{text-align:center;color:var(--muted);font-size:12px;margin-top:14px;line-height:1.5;max-width:412px}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+  /* ===== iPhone / màn hình hẹp: chạy toàn màn hình, bỏ khung giả ===== */
+  @media (max-width:480px){
+    body{padding:0;background:#fff;display:block}
+    .testbar{max-width:none;border-radius:0;margin:0;position:sticky;top:0;z-index:20;
+      padding-top:calc(10px + env(safe-area-inset-top))}
+    .phone{max-width:none;width:100%;border-radius:0;box-shadow:none;border:0;min-height:auto}
+    .appbar{padding-top:14px}
+    .foot{padding-bottom:calc(13px + env(safe-area-inset-bottom))}
+    .center-info{display:none}
+  }
+  /* khi mở thêm vào màn hình chính (standalone) thì chừa tai thỏ */
+  @media (display-mode:standalone){
+    .testbar{padding-top:calc(10px + env(safe-area-inset-top))}
+  }
+</style>
+</head>
+<body>
+
+<div class="testbar">
+  <span class="dot"></span><b>Chế độ thử nghiệm</b><span class="spacer"></span>
+  <div class="seg">
+    <button id="roleA" class="on" onclick="setRole('A')">App bên A</button>
+    <button id="roleB" onclick="setRole('B')">Link bên B</button>
+  </div>
+  <button class="reset" title="Làm lại" onclick="resetAll()">↻</button>
+</div>
+
+<div class="phone" id="phone"></div>
+<div class="center-info">Bản mẫu — hợp đồng giao khoán tạo từ phiếu PNT <b>NT.266876/ETV</b>. Gạt "App bên A / Link bên B" để xem hai phía.</div>
+
+<script>
+/* ===================== DATA TỪ PHIẾU PNT ===================== */
+const PNT={
+  soPhieu:"NT.266876/ETV",
+  soHĐDV:"2206.08/26/ĐL-ETV",
+  donViGui:"Cty_CN_Techno",
+  khachHang:"CÔNG TY TNHH ĐIỆN TỬ MEIKO VIỆT NAM",
+  noiNhan:"Trụ sở",
+  ycth:"KĐ; HC",
+  nguoiKhoiTao:"Nguyễn Văn Huy"   // = tài khoản đăng nhập ManLab
+};
+const ACCOUNT={name:PNT.nguoiKhoiTao, org:"Viện Kiểm định Công nghệ & Môi trường (ETV)"};
+const PRESETS=["Bốc xếp thiết bị","Vận chuyển thiết bị","Vệ sinh thiết bị / khu vực","Hỗ trợ lắp đặt, tháo dỡ","Lao động phổ thông khác"];
+
+let S;
+function fresh(){return{
+  role:'A', aStep:0,
+  code:"GK.266876/ETV",
+  tasks:[], value:'', place:PNT.noiNhan, from:'', to:'',
+  bName:'', bPhone:'', bId:'', bBank:'',
+  photoFront:null, photoBack:null, photoPortrait:null,
+  sent:false, bConfirmed:false, bDone:false, confirmTime:'',
+  doneDate:'', doneContent:'', result:'', closed:false,
+  touched:{}
+};}
+S=fresh();
+
+function setRole(r){S.role=r;
+  document.getElementById('roleA').classList.toggle('on',r==='A');
+  document.getElementById('roleB').classList.toggle('on',r==='B');render();}
+function resetAll(){const r=S.role;S=fresh();S.role=r;setRole(r);}
+
+/* ===================== HELPERS ===================== */
+const esc=s=>(s||'').replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
+const digits=s=>(''+(s||'')).replace(/\D/g,'');
+function fmtMoney(v){const n=digits(v);return n?Number(n).toLocaleString('vi-VN')+' đ':'—';}
+function fmtDate(d){if(!d)return '…';const[y,m,da]=d.split('-');return `${da}/${m}/${y}`;}
+function touch(f){S.touched[f]=true;}
+function statusPill(){
+  if(S.closed)return '<span class="pill ok">Đã thanh lý</span>';
+  if(S.bConfirmed)return '<span class="pill live">Đang thực hiện</span>';
+  if(S.sent)return '<span class="pill await">Chờ xác nhận</span>';
+  return '<span class="pill draft">Nháp</span>';}
+
+/* ===================== VALIDATION ===================== */
+function vStep1(){const e={};
+  if(!S.tasks.length)e.tasks='Chọn ít nhất một công việc.';
+  if(!digits(S.value)||Number(digits(S.value))<=0)e.value='Nhập giá trị khoán (lớn hơn 0).';
+  if(!S.place.trim())e.place='Nhập địa điểm thực hiện.';
+  if(!S.from)e.from='Chọn ngày bắt đầu.';
+  if(!S.to)e.to='Chọn ngày kết thúc.';
+  if(S.from&&S.to&&S.to<S.from)e.to='Ngày kết thúc phải sau ngày bắt đầu.';
+  return e;}
+function vStep2(){const e={};
+  if(!S.bName.trim())e.bName='Nhập họ và tên người nhận.';
+  if(digits(S.bPhone).length!==10)e.bPhone='Số điện thoại phải gồm 10 số.';
+  if(digits(S.bId).length!==12)e.bId='Số CCCD phải gồm đúng 12 chữ số.';
+  if(digits(S.bBank).length<6)e.bBank='Nhập số tài khoản hợp lệ.';
+  if(!S.photoFront)e.photoFront='1';
+  if(!S.photoBack)e.photoBack='1';
+  if(!S.photoPortrait)e.photoPortrait='1';
+  return e;}
+function vNT(){const e={};
+  if(!S.doneDate)e.doneDate='Chọn ngày hoàn thành.';
+  if(S.doneDate&&S.from&&S.doneDate<S.from)e.doneDate='Ngày hoàn thành không trước ngày bắt đầu.';
+  if(!S.doneContent.trim())e.doneContent='Nhập nội dung đã hoàn thành.';
+  if(!S.result)e.result='Chọn kết quả nghiệm thu.';
+  return e;}
+const ok=e=>Object.keys(e).length===0;
+const errLine=(e,f)=>(S.touched[f]&&e[f]&&e[f]!=='1')?`<div class="err">⚠ ${e[f]}</div>`:'';
+const badCls=(e,f)=>(S.touched[f]&&e[f])?'bad':'';
+
+/* ===================== RENDER ===================== */
+function render(){document.getElementById('phone').innerHTML = S.role==='A'?viewA():viewB();}
+
+function linkedCard(){
+  return `<div class="linked">
+    <div class="lh"><span class="lk">🔗</span>Lấy tự động từ phiếu nhận trả</div>
+    <div class="lrow"><span class="k">Số phiếu PNT</span><span class="v mono">${PNT.soPhieu}</span></div>
+    <div class="lrow"><span class="k">Số HĐ dịch vụ</span><span class="v mono">${PNT.soHĐDV}</span></div>
+    <div class="lrow"><span class="k">Đơn vị gửi</span><span class="v">${PNT.donViGui}</span></div>
+    <div class="lrow"><span class="k">Khách hàng</span><span class="v">${PNT.khachHang}</span></div>
+    <div class="lrow"><span class="k">Yêu cầu</span><span class="v">${PNT.ycth}</span></div>
+    <div class="lrow"><span class="k">Người thực hiện</span><span class="v">${ACCOUNT.name}</span></div>
+  </div>`;}
+
+/* ---------- BÊN A ---------- */
+function viewA(){
+  /* STEP 0 — vào từ phiếu */
+  if(S.aStep===0){
+    return `<div class="appbar">
+        <div class="top"><span class="back">‹</span><div class="htitle">Tạo hợp đồng giao khoán</div>${statusPill()}</div>
+        <div class="acct">● Đăng nhập: <b>${ACCOUNT.name}</b></div>
+        <div class="screen-title">Thuê khoán nhân công hiện trường</div>
+        <div class="screen-sub">Tạo ngay từ phiếu ${PNT.soPhieu} đang xử lý.</div>
+      </div>
+      <div class="body">
+        ${linkedCard()}
+        <div class="note"><span class="ic">ⓘ</span><div>Hợp đồng giao khoán <b>${S.code}</b> sẽ gắn với phiếu này. Bạn chỉ cần khai phần nhân công.</div></div>
+      </div>
+      <div class="foot"><button class="btn primary" onclick="S.aStep=1;render()">Bắt đầu khai báo nhân công →</button></div>`;
+  }
+
+  const titles={1:'Công việc & giá trị',2:'Người nhận khoán',3:'Gửi & chờ xác nhận',4:'Nghiệm thu & thanh lý'};
+  const subs={1:'Khoán theo gói/kết quả, không theo ngày công.',2:'Bạn khai hộ để người nhận chỉ việc bấm đồng ý.',
+    3:'Người nhận xác nhận qua tin nhắn — không cần app.',4:'Xong việc thì nghiệm thu và kết thúc hợp đồng.'};
+  const rail=[1,2,3,4].map(i=>`<div class="tick ${i<S.aStep?'done':i===S.aStep?'cur':''}"></div>`).join('');
+  const head=`<div class="appbar">
+      <div class="top"><span class="back" onclick="backA()">‹</span><div class="htitle">${S.code}</div>${statusPill()}</div>
+      <div class="screen-title">${titles[S.aStep]}</div><div class="screen-sub">${subs[S.aStep]}</div>
+      <div class="rail">${rail}</div></div>`;
+  let body='',foot='';
+
+  if(S.aStep===1){
+    const e=vStep1();
+    body=`
+      <div class="group"><div class="label">Công việc giao khoán <span class="req">*</span></div>
+        <div class="chips">${PRESETS.map((t,i)=>`<div class="chip ${S.tasks.includes(i)?'on':''}" onclick="toggleTask(${i})"><span class="bx"></span>${t}</div>`).join('')}</div>
+        ${errLine(e,'tasks')}</div>
+      <div class="field"><div class="label">Giá trị khoán cả gói <span class="req">*</span></div>
+        <input class="mono ${badCls(e,'value')}" inputmode="numeric" placeholder="0" value="${esc(S.value)}"
+          oninput="S.value=this.value;touch('value');soft('a1')" onblur="touch('value');render()">
+        <div class="ftag" id="valtag">${digits(S.value)?fmtMoney(S.value):'Nhập số tiền cho cả gói công việc'}</div>${errLine(e,'value')}</div>
+      <div class="field"><div class="label">Địa điểm thực hiện <span class="req">*</span> <span class="hint">· lấy từ phiếu, sửa nếu cần</span></div>
+        <input class="${badCls(e,'place')}" value="${esc(S.place)}" oninput="S.place=this.value;touch('place');soft('a1')" onblur="touch('place');render()">${errLine(e,'place')}</div>
+      <div class="two">
+        <div class="field"><div class="label">Từ ngày <span class="req">*</span></div>
+          <input type="date" class="${badCls(e,'from')}" value="${S.from}" oninput="S.from=this.value;touch('from');render()"></div>
+        <div class="field"><div class="label">Đến ngày <span class="req">*</span></div>
+          <input type="date" class="${badCls(e,'to')}" value="${S.to}" oninput="S.to=this.value;touch('to');render()"></div>
+      </div>${errLine(e,'from')||errLine(e,'to')}`;
+    foot=`<button class="btn ghost" onclick="S.aStep=0;render()">‹</button>
+          <button class="btn primary" id="a1next" ${ok(e)?'':'disabled'} onclick="nextA1()">Tiếp tục</button>`;
+  }
+
+  else if(S.aStep===2){
+    const e=vStep2();
+    body=`
+      <div class="field"><div class="label">Họ và tên người nhận <span class="req">*</span></div>
+        <input class="${badCls(e,'bName')}" placeholder="Nguyễn Văn A" value="${esc(S.bName)}" oninput="S.bName=this.value;touch('bName');soft('a2')" onblur="touch('bName');render()">${errLine(e,'bName')}</div>
+      <div class="field"><div class="label">Số điện thoại <span class="req">*</span> <span class="hint">· để gửi link xác nhận</span></div>
+        <input class="mono ${badCls(e,'bPhone')}" inputmode="tel" maxlength="12" placeholder="09xx xxx xxx" value="${esc(S.bPhone)}" oninput="S.bPhone=this.value;touch('bPhone');soft('a2')" onblur="touch('bPhone');render()">${errLine(e,'bPhone')}</div>
+      <div class="field"><div class="label">Số CCCD <span class="req">*</span> <span class="hint">· 12 số</span></div>
+        <input class="mono ${badCls(e,'bId')}" inputmode="numeric" maxlength="14" placeholder="0xx xxx xxx xxx" value="${esc(S.bId)}" oninput="S.bId=this.value;touch('bId');soft('a2')" onblur="touch('bId');render()">${errLine(e,'bId')}</div>
+      <div class="field"><div class="label">Số tài khoản nhận tiền <span class="req">*</span></div>
+        <input class="mono ${badCls(e,'bBank')}" inputmode="numeric" placeholder="Số TK · ngân hàng" value="${esc(S.bBank)}" oninput="S.bBank=this.value;touch('bBank');soft('a2')" onblur="touch('bBank');render()">${errLine(e,'bBank')}</div>
+      <div class="group"><div class="label">Ảnh CCCD <span class="req">*</span> <span class="hint">· chụp 2 mặt</span></div>
+        <div class="photos">${photoSlot('photoFront','Mặt trước',e)}${photoSlot('photoBack','Mặt sau',e)}</div></div>
+      <div class="group"><div class="label">Ảnh chân dung người nhận <span class="req">*</span></div>
+        <div class="photos"><div style="flex:1"></div>${photoSlot('photoPortrait','Chụp chân dung',e)}<div style="flex:1"></div></div></div>
+      <div class="note"><span class="ic">✓</span><div>Ảnh lưu vào hồ sơ điện tử. Người nhận <b>không phải tự chụp hay nhập gì</b>.</div></div>`;
+    foot=`<button class="btn ghost" onclick="S.aStep=1;render()">‹</button>
+          <button class="btn primary" id="a2next" ${ok(e)?'':'disabled'} onclick="nextA2()">Tạo & gửi cho người nhận</button>`;
+  }
+
+  else if(S.aStep===3){
+    S.sent=true;
+    if(!S.bConfirmed){
+      body=`<div class="gate"><div class="qr">${qrSVG()}</div><div class="codebox">${S.code}</div></div>
+        <div class="shareopts">
+          <button onclick="alert('Demo: gửi link qua Zalo')"><span class="ic">💬</span>Zalo</button>
+          <button onclick="alert('Demo: gửi SMS kèm link')"><span class="ic">✉️</span>SMS</button>
+          <button onclick="alert('Demo: sao chép link')"><span class="ic">🔗</span>Chép link</button></div>
+        <div class="waitbar"><span class="spin"></span> Đang chờ <b>${esc(S.bName)}</b> xác nhận tham gia…</div>
+        <div class="note gray" style="margin-bottom:10px"><span class="ic">✉️</span><div>Đã gửi liên kết xác nhận tới số <b>${esc(digits(S.bPhone))}</b>.</div></div>
+        <div class="note amber"><span class="ic">🔒</span><div>Chưa thể nghiệm thu khi người nhận <b>chưa xác nhận</b>. Bước tiếp tự mở khi có xác nhận.</div></div>
+        <button class="simlink" onclick="setRole('B')">▷ Mở thử màn hình xác nhận của người nhận</button>`;
+      foot=`<button class="btn ghost" onclick="S.aStep=2;render()">‹</button><button class="btn primary" disabled>Chờ xác nhận…</button>`;
+    } else {
+      body=`<div class="note" style="margin-bottom:14px"><span class="ic">✅</span><div><b>${esc(S.bName)}</b> đã xác nhận lúc ${S.confirmTime}. Hợp đồng <b>đang thực hiện</b>.</div></div>${summaryCard(true)}`;
+      foot=`<button class="btn primary" onclick="S.aStep=4;render()">Tiếp tục nghiệm thu →</button>`;
+    }
+  }
+
+  else if(S.aStep===4){
+    const e=vNT();
+    body=`
+      <div class="note gray" style="margin-bottom:16px"><span class="ic">ⓘ</span><div>Thực hiện khi công việc đã xong. Nghiệm thu xong, hợp đồng tự kết thúc.</div></div>
+      <div class="field"><div class="label">Thời gian hoàn thành <span class="req">*</span></div>
+        <input type="date" class="${badCls(e,'doneDate')}" value="${S.doneDate}" oninput="S.doneDate=this.value;touch('doneDate');render()">${errLine(e,'doneDate')}</div>
+      <div class="field"><div class="label">Nội dung công việc đã hoàn thành <span class="req">*</span></div>
+        <textarea class="${badCls(e,'doneContent')}" placeholder="VD: Đã bốc xếp, vận chuyển, vệ sinh toàn bộ thiết bị; bàn giao đầy đủ, không hư hỏng." oninput="S.doneContent=this.value;touch('doneContent');soft('a4')" onblur="touch('doneContent');render()">${esc(S.doneContent)}</textarea>${errLine(e,'doneContent')}</div>
+      <div class="group"><div class="label">Kết quả nghiệm thu <span class="req">*</span></div>
+        <div class="opts"><div class="opt ${S.result==='dat'?'on-pass':''}" onclick="S.result='dat';touch('result');render()">✓ Đạt</div>
+        <div class="opt ${S.result==='khong'?'on-fail':''}" onclick="S.result='khong';touch('result');render()">✕ Không đạt</div></div>${errLine(e,'result')}</div>
+      <div class="card"><div class="ch">Thanh toán</div>
+        <div class="row"><span class="k">Giá trị nghiệm thu</span><span class="v amt">${fmtMoney(S.value)}</span></div>
+        <div class="row"><span class="k">Chuyển tới</span><span class="v bank">${esc(S.bBank)||'—'}</span></div></div>`;
+    foot=`<button class="btn ghost" onclick="S.aStep=3;render()">‹</button>
+          <button class="btn confirm" id="a4next" ${ok(e)?'':'disabled'} onclick="closeC()">Kết thúc hợp đồng</button>`;
+  }
+
+  else if(S.aStep===5){
+    return `<div class="appbar"><div class="top"><div class="htitle">${S.code}</div>${statusPill()}</div></div>
+      <div class="body"><div class="done"><div class="seal"><div class="ring">✓</div></div>
+        <h2>Hợp đồng đã thanh lý</h2>
+        <p>Hợp đồng <b>${S.code}</b> đã nghiệm thu (${S.result==='dat'?'Đạt':'Không đạt'}) và kết thúc. Hồ sơ lưu kèm ảnh CCCD, chân dung và xác nhận điện tử.</p>
+        <div class="receipt">${S.code} · gắn phiếu ${PNT.soPhieu}<br>Người nhận: ${esc(S.bName)} · CCCD ${esc(digits(S.bId))}<br>Hoàn thành ${fmtDate(S.doneDate)} · ĐÃ THANH LÝ</div>
+      </div></div>
+      <div class="foot"><button class="btn ghost" onclick="resetAll()">Mới</button>
+        <button class="btn primary" onclick="alert('Demo: tải PDF hợp đồng + biên bản nghiệm thu')">Xuất PDF hồ sơ</button></div>`;
+  }
+
+  return head+`<div class="body">${body}</div><div class="foot">${foot}</div>`;
+}
+
+function backA(){ if(S.aStep>1)S.aStep--; else S.aStep=0; render(); }
+
+function photoSlot(key,tx,e){const set=!!S[key];const bad=S.touched['a2']&&e[key]==='1';
+  return `<label class="ph-slot ${set?'set':''} ${bad?'bad':''}"><input type="file" accept="image/*" capture="environment" onchange="pickPhoto('${key}',this)">
+    ${set?`<img src="${S[key]}"><div class="ph-ok">✓</div>`:`<div><div class="ph-ic">📷</div><div class="ph-tx">${tx}</div></div>`}</label>`;}
+
+function summaryCard(withThumbs){const t=S.tasks.length?S.tasks:[0];
+  return `<div class="card">
+    <div class="ch"><span class="n">${S.code}</span> Hợp đồng giao khoán</div>
+    <div class="row"><span class="k">Gắn phiếu</span><span class="v mono">${PNT.soPhieu}</span></div>
+    <div class="row"><span class="k">Bên giao khoán</span><span class="v">${ACCOUNT.org}</span></div>
+    <div class="row"><span class="k">Người đại diện</span><span class="v">${ACCOUNT.name}</span></div>
+    <div class="row"><span class="k">Người nhận</span><span class="v">${esc(S.bName)}</span></div>
+    <div class="row"><span class="k">Điện thoại</span><span class="v mono">${esc(digits(S.bPhone))||'—'}</span></div>
+    <div class="row"><span class="k">CCCD</span><span class="v mono">${esc(digits(S.bId))||'—'}</span></div>
+    <div class="row"><span class="k">Giá trị khoán</span><span class="v amt">${fmtMoney(S.value)}</span></div>
+    <div class="row"><span class="k">Trả vào TK</span><span class="v bank">${esc(S.bBank)||'—'}</span></div>
+    <div class="row"><span class="k">Thời gian</span><span class="v mono">${fmtDate(S.from)} → ${fmtDate(S.to)}</span></div>
+    <div class="tasklist">${t.map(i=>`<span>${PRESETS[i]}</span>`).join('')}</div>
+    ${withThumbs&&(S.photoFront||S.photoPortrait)?`<div class="thumbs">
+      ${S.photoFront?`<div class="t"><img src="${S.photoFront}"><div class="cap">CCCD trước</div></div>`:''}
+      ${S.photoBack?`<div class="t"><img src="${S.photoBack}"><div class="cap">CCCD sau</div></div>`:''}
+      ${S.photoPortrait?`<div class="t"><img src="${S.photoPortrait}"><div class="cap">Chân dung</div></div>`:''}</div>`:''}
+  </div>`;}
+
+/* ---------- BÊN B (link, không cần app) ---------- */
+function viewB(){
+  if(!S.sent){
+    return `<div class="bbar"><span>🔒</span><span class="url">manlab.vn/xn/…</span></div>
+      <div class="body"><div class="bhead"><div class="logo2">M</div><h1>Chưa có hợp đồng</h1><p>Hãy tạo và gửi ở "App bên A" trước.</p></div>
+      <div class="note amber" style="margin-top:16px"><span class="ic">ⓘ</span><div>Thực tế: người nhận bấm liên kết trong tin nhắn để mở thẳng màn hình này.</div></div></div>`;
+  }
+  if(S.bDone){
+    return `<div class="bbar"><span>🔒</span><span class="url">manlab.vn/xn/${digits(S.code)}</span></div>
+      <div class="body"><div class="done"><div class="seal"><div class="ring">✓</div></div>
+        <h2>Đã xác nhận xong</h2>
+        <p>Cảm ơn ${esc(S.bName.split(' ').slice(-1)[0]||'bạn')}. Bạn đã đồng ý tham gia công việc. Không cần làm gì thêm.</p>
+        <div class="receipt">${S.code} · ${S.confirmTime}<br>Đã gửi xác nhận tới bên giao khoán</div></div></div>
+      <div class="foot"><button class="btn primary" onclick="setRole('A')">← Xem phía bên A</button></div>`;
+  }
+  const t=S.tasks.length?S.tasks:[0];
+  return `<div class="bbar"><span>🔒</span><span class="url">manlab.vn/xn/${digits(S.code)}</span></div>
+    <div class="body">
+      <div class="bhead"><div class="logo2">M</div><h1>Mời bạn nhận việc</h1><p>${ACCOUNT.org} mời bạn làm công việc dưới đây.</p></div>
+      <div class="card" style="margin-top:14px"><div class="ch"><span class="n">${S.code}</span> Thông tin công việc</div>
+        <div class="tasklist" style="border-top:0">${t.map(i=>`<span>${PRESETS[i]}</span>`).join('')}</div>
+        <div class="row"><span class="k">Tiền công cả gói</span><span class="v amt">${fmtMoney(S.value)}</span></div>
+        <div class="row"><span class="k">Nơi làm</span><span class="v">${esc(S.place)||'—'}</span></div>
+        <div class="row"><span class="k">Thời gian</span><span class="v mono">${fmtDate(S.from)} → ${fmtDate(S.to)}</span></div>
+        <div class="row"><span class="k">Trả vào TK</span><span class="v bank">${esc(S.bBank)||'—'}</span></div></div>
+      <div class="note gray"><span class="ic">👤</span><div>Tên bạn: <b>${esc(S.bName)}</b> · ĐT ${esc(digits(S.bPhone))} · CCCD ${esc(digits(S.bId))}<br>Thông tin do bên giao khoán nhập sẵn. Nếu sai, báo lại người gửi.</div></div>
+      <div class="consent"><p>Bấm nút bên dưới nghĩa là bạn <b>đồng ý nhận làm công việc trên</b> với số tiền đã ghi. Đây là thỏa thuận giao khoán theo kết quả.</p></div>
+    </div>
+    <div class="foot"><button class="btn confirm big" onclick="confirmB()">Tôi đồng ý tham gia</button></div>`;
+}
+
+/* ===================== ACTIONS ===================== */
+function toggleTask(i){const k=S.tasks.indexOf(i);if(k<0)S.tasks.push(i);else S.tasks.splice(k,1);touch('tasks');render();}
+function soft(step){let e,id;
+  if(step==='a1'){e=vStep1();id='a1next';const tg=document.getElementById('valtag');if(tg)tg.textContent=digits(S.value)?fmtMoney(S.value):'Nhập số tiền cho cả gói công việc';}
+  else if(step==='a2'){e=vStep2();id='a2next';}
+  else if(step==='a4'){e=vNT();id='a4next';}
+  const b=document.getElementById(id);if(b)b.disabled=!ok(e);}
+function nextA1(){['tasks','value','place','from','to'].forEach(f=>S.touched[f]=true);if(ok(vStep1()))S.aStep=2;render();}
+function nextA2(){['bName','bPhone','bId','bBank','a2'].forEach(f=>S.touched[f]=true);if(ok(vStep2()))S.aStep=3;render();}
+function pickPhoto(key,input){const f=input.files&&input.files[0];if(!f)return;const rd=new FileReader();rd.onload=ev=>{S[key]=ev.target.result;render();};rd.readAsDataURL(f);}
+function confirmB(){S.bConfirmed=true;S.bDone=true;S.confirmTime=new Date().toLocaleString('vi-VN');render();}
+function closeC(){['doneDate','doneContent','result','a4'].forEach(f=>S.touched[f]=true);if(ok(vNT())){S.closed=true;S.aStep=5;}render();}
+
+function qrSVG(){let c='';const seed=[...S.code].reduce((a,ch)=>a+ch.charCodeAt(0),0);
+  for(let y=0;y<11;y++)for(let x=0;x<11;x++){const on=((x*7+y*13+seed)%3===0)||(x<3&&y<3)||(x>7&&y<3)||(x<3&&y>7);
+  if(on)c+=`<rect x="${x*12}" y="${y*12}" width="11" height="11" rx="2" fill="#16261C"/>`;}
+  return `<svg viewBox="0 0 132 132">${c}</svg>`;}
+
+render();
+</script>
+</body>
+</html>
